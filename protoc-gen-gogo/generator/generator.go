@@ -349,7 +349,7 @@ func (d *FileDescriptor) goFileName(pathType pathType) string {
 	if ext := path.Ext(name); ext == ".proto" || ext == ".protodevel" {
 		name = name[:len(name)-len(ext)]
 	}
-	name += ".pb.go"
+	name += ".pbf.go"
 
 	if pathType == pathTypeSourceRelative {
 		return name
@@ -756,7 +756,7 @@ func (g *Generator) SetPackageNames() {
 	// Check that all files have a consistent package name and import path.
 	for _, f := range g.genFiles[1:] {
 		if a, b := g.genFiles[0].importPath, f.importPath; a != b {
-			g.Fail(fmt.Sprintf("inconsistent package import paths: %v, %v", a, b))
+			// g.Fail(fmt.Sprintf("inconsistent package import paths: %v, %v", a, b))
 		}
 		if a, b := g.genFiles[0].packageName, f.packageName; a != b {
 			g.Fail(fmt.Sprintf("inconsistent package names: %v, %v", a, b))
@@ -1212,9 +1212,9 @@ func (g *Generator) generate(file *FileDescriptor) {
 	for _, td := range g.file.imp {
 		g.generateImported(td)
 	}
-	for _, enum := range g.file.enum {
-		g.generateEnum(enum)
-	}
+	// for _, enum := range g.file.enum {
+	// 	g.generateEnum(enum)
+	// }
 	for _, desc := range g.file.desc {
 		// Don't generate virtual messages for maps.
 		if desc.GetOptions().GetMapEntry() {
@@ -2501,7 +2501,7 @@ func (g *Generator) generateInternalStructFields(mc *msgCtx, topLevelFields []to
 		}
 	}
 	if gogoproto.HasUnrecognized(g.file.FileDescriptorProto, mc.message.DescriptorProto) {
-		g.P("XXX_unrecognized\t[]byte `json:\"-\"`")
+		g.P("unknownFields\t[]byte `json:\"-\"`")
 	}
 	if gogoproto.HasSizecache(g.file.FileDescriptorProto, mc.message.DescriptorProto) {
 		g.P("XXX_sizecache\tint32 `json:\"-\"`")
@@ -2644,23 +2644,23 @@ func (g *Generator) generateSetters(mc *msgCtx, topLevelFields []topLevelField) 
 // generateCommonMethods adds methods to the message that are not on a per field basis.
 func (g *Generator) generateCommonMethods(mc *msgCtx) {
 	// Reset, String and ProtoMessage methods.
-	g.P("func (m *", mc.goName, ") Reset() { *m = ", mc.goName, "{} }")
-	if gogoproto.EnabledGoStringer(g.file.FileDescriptorProto, mc.message.DescriptorProto) {
-		g.P("func (m *", mc.goName, ") String() string { return ", g.Pkg["proto"], ".CompactTextString(m) }")
-	}
-	g.P("func (*", mc.goName, ") ProtoMessage() {}")
-	var indexes []string
-	for m := mc.message; m != nil; m = m.parent {
-		indexes = append([]string{strconv.Itoa(m.index)}, indexes...)
-	}
-	g.P("func (*", mc.goName, ") Descriptor() ([]byte, []int) {")
-	g.P("return ", g.file.VarName(), ", []int{", strings.Join(indexes, ", "), "}")
-	g.P("}")
+	// g.P("func (m *", mc.goName, ") Reset() { *m = ", mc.goName, "{} }")
+	// if gogoproto.EnabledGoStringer(g.file.FileDescriptorProto, mc.message.DescriptorProto) {
+	// 	g.P("func (m *", mc.goName, ") String() string { return ", g.Pkg["proto"], ".CompactTextString(m) }")
+	// }
+	// g.P("func (*", mc.goName, ") ProtoMessage() {}")
+	// var indexes []string
+	// for m := mc.message; m != nil; m = m.parent {
+	// 	indexes = append([]string{strconv.Itoa(m.index)}, indexes...)
+	// }
+	// g.P("func (*", mc.goName, ") Descriptor() ([]byte, []int) {")
+	// g.P("return ", g.file.VarName(), ", []int{", strings.Join(indexes, ", "), "}")
+	// g.P("}")
 	// TODO: Revisit the decision to use a XXX_WellKnownType method
 	// if we change proto.MessageName to work with multiple equivalents.
-	if mc.message.file.GetPackage() == "google.protobuf" && wellKnownTypes[mc.message.GetName()] {
-		g.P("func (*", mc.goName, `) XXX_WellKnownType() string { return "`, mc.message.GetName(), `" }`)
-	}
+	// if mc.message.file.GetPackage() == "google.protobuf" && wellKnownTypes[mc.message.GetName()] {
+	// 	g.P("func (*", mc.goName, `) XXX_WellKnownType() string { return "`, mc.message.GetName(), `" }`)
+	// }
 
 	// Extension support methods
 	if len(mc.message.ExtensionRange) > 0 {
@@ -3003,20 +3003,20 @@ func (g *Generator) generateMessage(message *Descriptor) {
 		message: message,
 	}
 
-	if gogoproto.HasTypeDecl(message.file.FileDescriptorProto, message.DescriptorProto) {
-		g.generateMessageStruct(mc, topLevelFields)
-		g.P()
-	}
+	// if gogoproto.HasTypeDecl(message.file.FileDescriptorProto, message.DescriptorProto) {
+	// 	g.generateMessageStruct(mc, topLevelFields)
+	// 	g.P()
+	// }
 	g.generateCommonMethods(mc)
 	g.P()
 	g.generateDefaultConstants(mc, topLevelFields)
 	g.P()
 	g.generateOneofDecls(mc, topLevelFields)
 	g.P()
-	g.generateGetters(mc, topLevelFields)
-	g.P()
-	g.generateSetters(mc, topLevelFields)
-	g.P()
+	// g.generateGetters(mc, topLevelFields)
+	// g.P()
+	// g.generateSetters(mc, topLevelFields)
+	// g.P()
 	g.generateOneofFuncs(mc, topLevelFields)
 	g.P()
 

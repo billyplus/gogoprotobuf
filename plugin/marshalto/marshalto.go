@@ -947,10 +947,10 @@ func (p *marshalto) Generate(file *generator.FileDescriptor) {
 		p.P(`var l int`)
 		p.P(`_ = l`)
 		if gogoproto.HasUnrecognized(file.FileDescriptorProto, message.DescriptorProto) {
-			p.P(`if m.XXX_unrecognized != nil {`)
+			p.P(`if m.unknownFields != nil {`)
 			p.In()
-			p.P(`i -= len(m.XXX_unrecognized)`)
-			p.P(`copy(dAtA[i:], m.XXX_unrecognized)`)
+			p.P(`i -= len(m.unknownFields)`)
+			p.P(`copy(dAtA[i:], m.unknownFields)`)
 			p.Out()
 			p.P(`}`)
 		}
