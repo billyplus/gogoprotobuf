@@ -309,6 +309,7 @@ type FileDescriptor struct {
 
 	importPath  GoImportPath  // Import path of this file's package.
 	packageName GoPackageName // Name of this file's Go package.
+	goModule    string        // module of go
 
 	proto3 bool // whether to generate proto3 code for this file
 }
@@ -361,6 +362,10 @@ func (d *FileDescriptor) goFileName(pathType pathType) string {
 		// Replace the existing dirname with the declared import path.
 		_, name = path.Split(name)
 		name = path.Join(string(impPath), name)
+		if len(d.goModule) > 0 && strings.HasPrefix(name, d.goModule) {
+			// go module is defined and file name has prefix of go module
+			name = strings.Replace(name, d.goModule, "", 1)
+		}
 		return name
 	}
 
@@ -441,6 +446,7 @@ type Generator struct {
 	Response *plugin.CodeGeneratorResponse // The output.
 
 	Param             map[string]string // Command-line parameters.
+	Module            string            // go module
 	PackageImportPath string            // Go import path of the package we're generating code for
 	ImportPrefix      string            // String to prefix to imported package file names.
 	ImportMap         map[string]string // Mapping from .proto file name to import path
@@ -521,6 +527,8 @@ func (g *Generator) CommandLineParameters(parameter string) {
 			g.ImportPrefix = v
 		case "import_path":
 			g.PackageImportPath = v
+		case "module":
+			g.Module = v
 		case "paths":
 			switch v {
 			case "import":
@@ -1155,6 +1163,7 @@ func (g *Generator) GenerateAllFiles() {
 	}
 	for _, file := range g.allFiles {
 		g.Reset()
+		file.goModule = g.Module
 		g.annotations = nil
 		g.writeOutput = genFileMap[file]
 		g.generate(file)
@@ -1225,8 +1234,8 @@ func (g *Generator) generate(file *FileDescriptor) {
 	for _, ext := range g.file.ext {
 		g.generateExtension(ext)
 	}
-	g.generateInitFunction()
-	g.generateFileDescriptor(file)
+	// g.generateInitFunction()
+	// g.generateFileDescriptor(file)
 
 	// Run the plugins before the imports so we know which imports are necessary.
 	g.runPlugins(file)

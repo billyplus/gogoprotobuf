@@ -93,6 +93,7 @@ func GeneratePlugin(req *plugin.CodeGeneratorRequest, p generator.Plugin, filena
 		g.Response.File[i].Name = proto.String(
 			strings.Replace(*g.Response.File[i].Name, ".pb.go", filenameSuffix, -1),
 		)
+		// g.Out()(g.Response.File[i].Name)
 	}
 	if err := goformat(g.Response); err != nil {
 		g.Error(err)
